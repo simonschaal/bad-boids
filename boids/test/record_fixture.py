@@ -1,4 +1,7 @@
 import yaml
+import sys
+sys.path.append("..") # Adds higher directory to python modules path.
+
 import boids
 from copy import deepcopy
 before=deepcopy(boids.boids)

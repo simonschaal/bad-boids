@@ -14,10 +14,12 @@ y_lim=(300, 600)
 xvs_lim=(0, 10)
 yvs_lim=(-20, 20)
 
-boids_x=[random.uniform(*x_lim) for x in range(boid_count)]
-boids_y=[random.uniform(*y_lim) for x in range(boid_count)]
-boid_x_velocities=[random.uniform(*xvs_lim) for x in range(boid_count)]
-boid_y_velocities=[random.uniform(*yvs_lim) for x in range(boid_count)]
+def gen_random(xlimits, ylimits, count):
+    return ([random.uniform(*xlimits) for x in range(count)], [random.uniform(*ylimits) for x in range(count)])
+
+
+boids_x, boids_y = gen_random(x_lim, y_lim, boid_count)
+boid_x_velocities, boid_y_velocities = gen_random(xvs_lim, yvs_lim, boid_count)
 boids=(boids_x,boids_y,boid_x_velocities,boid_y_velocities)
 
 def update_boids(boids):
