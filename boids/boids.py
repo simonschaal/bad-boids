@@ -1,25 +1,23 @@
-"""
-A deliberately bad implementation of [Boids](http://dl.acm.org/citation.cfm?doid=37401.37406)
-for use as an exercise on refactoring.
-"""
 
 from matplotlib import pyplot as plt
 from matplotlib import animation
 import random
+import numpy as np
 
-# Deliberately terrible code for teaching purposes
 boid_count=50
-x_lim=(-450, 50)
-y_lim=(300, 600)
-xvs_lim=(0, 10)
-yvs_lim=(-20, 20)
-
-def gen_random(xlimits, ylimits, count):
-    return ([random.uniform(*xlimits) for x in range(count)], [random.uniform(*ylimits) for x in range(count)])
+plow_lim=np.array([-450, 300])
+pup_lim=np.array([50, 600])
+vlow_lim=np.array([0, -20])
+vup_lim=np.array([10, 20])
 
 
-boids_x, boids_y = gen_random(x_lim, y_lim, boid_count)
-boid_x_velocities, boid_y_velocities = gen_random(xvs_lim, yvs_lim, boid_count)
+def gen_random(count, lower_limits, upper_limits):
+    width=upper_limits-lower_limits
+    return (lower_limits[:,np.newaxis] + 
+         np.random.rand(2, count)*width[:,np.newaxis])
+
+boids_x, boids_y = gen_random(boid_count, plow_lim, pup_lim)
+boid_x_velocities, boid_y_velocities = gen_random(boid_count, vlow_lim, vup_lim)
 boids=(boids_x,boids_y,boid_x_velocities,boid_y_velocities)
 
 def update_boids(boids):

@@ -2,6 +2,7 @@ from ..boids import update_boids, gen_random
 from nose.tools import assert_almost_equal, assert_equal
 import os
 import yaml
+import numpy as np
 
 def test_bad_boids_regression():
     regression_data=yaml.load(open(os.path.join(os.path.dirname(__file__),'fixtures','fixture.yml')))
@@ -12,14 +13,14 @@ def test_bad_boids_regression():
             assert_almost_equal(after_value,before_value,delta=0.01)
 	
 def test_gen_random():
-    xlim=(-1,1)
-    ylim=(0,1)
+    low=np.array([-1,1])
+    up=np.array([0,1])
     count=10
-    x, y = gen_random(xlim, ylim, count)
+    x, y = gen_random(count, low, up)
     assert_equal(len(x), count)
-    assert max(x) <= max(xlim)
-    assert min(x) >= min(xlim)
+    assert max(x) <= up[0]
+    assert min(x) >= low[0]
     assert_equal(len(y), count)
-    assert max(y) <= max(ylim)
-    assert min(y) >= min(ylim)
+    assert max(y) <= up[1]
+    assert min(y) >= low[1]
 
