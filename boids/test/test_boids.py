@@ -7,10 +7,12 @@ import numpy as np
 def test_bad_boids_regression():
     regression_data=yaml.load(open(os.path.join(os.path.dirname(__file__),'fixtures','fixture.yml')))
     boid_data=regression_data["before"]
-    update_boids(boid_data)
-    for after,before in zip(regression_data["after"],boid_data):
+    positions=np.array([boid_data[0], boid_data[1]])
+    velocities=np.array([boid_data[2], boid_data[3]])
+    update_boids(positions, velocities)
+    for after,before in zip(regression_data["after"],positions.tolist()+velocities.tolist()):
         for after_value,before_value in zip(after,before): 
-            assert_almost_equal(after_value,before_value,delta=0.01)
+            assert_almost_equal(after_value,before_value,delta=0.02)
 	
 def test_gen_random():
     low=np.array([-1,1])
