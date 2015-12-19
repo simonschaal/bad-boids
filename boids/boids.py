@@ -4,63 +4,66 @@ from matplotlib import animation
 import random
 import numpy as np
 
-boid_count=50
-plow_lim=np.array([-450, 300])
-pup_lim=np.array([50, 600])
-vlow_lim=np.array([0, -20])
-vup_lim=np.array([10, 20])
+
+class Boids(object):
+    def __init__(self, boid_count, xlimits=(-450, 50), ylimits=(300, 600), vxlimits=(0, 10), vylimits=(-20, 20)):
+        self.boid_count=boid_count
+        self._xy_low_lim=np.array([xlimits[0], ylimits[0]])
+        self._xy_up_lim=np.array([xlimits[1], ylimits[1]])
+        self._vxy_low_lim=np.array([vxlimits[0], vylimits[0]])
+        self._vxy_up_lim=np.array([vxlimits[1], vylimits[1]])
+        # generate random boid positions and velocities within given limits
+        self.pos = self.gen_random(self.boid_count, self._xy_low_lim, self._xy_up_lim)
+        self.vel = self.gen_random(self.boid_count, self._vxy_low_lim, self._vxy_up_lim)
+
+    def gen_random(self, count, lower_limits, upper_limits):
+        width=upper_limits-lower_limits
+        return (lower_limits[:,np.newaxis] + 
+            np.random.rand(2, count)*width[:,np.newaxis])
+
+    def update_boids(self, positions, velocities):
+    	# Fly towards the middle
+        strength=0.01
+        middle=np.mean(positions, 1)
+        direction_to_middle = positions - middle[:, np.newaxis]
+        velocities -= direction_to_middle * strength
+        
+	    # Fly away from nearby boids
+        separations = positions[:,np.newaxis,:] - positions[:,:,np.newaxis]
+        squared_displacements = separations * separations
+        square_distances = np.sum(squared_displacements, 0)
+        alert_distance = 100
+        far_away = square_distances > alert_distance
+        separations_if_close = np.copy(separations)
+        separations_if_close[0,:,:][far_away] =0
+        separations_if_close[1,:,:][far_away] =0
+        velocities += np.sum(separations_if_close,1) 
+        
+	    # Try to match speed with nearby boids
+        velocity_differences = velocities[:,np.newaxis,:] - velocities[:,:,np.newaxis]
+        formation_flying_distance = 10000
+        formation_flying_strength = 0.125
+        very_far=square_distances > formation_flying_distance
+        velocity_differences_if_close = np.copy(velocity_differences)
+        velocity_differences_if_close[0,:,:][very_far] =0
+        velocity_differences_if_close[1,:,:][very_far] =0
+        velocities -= np.mean(velocity_differences_if_close, 1) * formation_flying_strength
+        
+        #update positions acc to velocities
+        positions += velocities
+
+    def animate(self,frame, scatter):
+        self.update_boids(self.pos, self.vel)
+        scatter.set_offsets(zip(self.pos[0], self.pos[1]))
 
 
-def gen_random(count, lower_limits, upper_limits):
-    width=upper_limits-lower_limits
-    return (lower_limits[:,np.newaxis] + 
-         np.random.rand(2, count)*width[:,np.newaxis])
-
-pos = gen_random(boid_count, plow_lim, pup_lim)
-vel = gen_random(boid_count, vlow_lim, vup_lim)
-
-
-def update_boids(positions, velocities):
-	# Fly towards the middle
-    strength=0.01
-    middle=np.mean(positions, 1)
-    direction_to_middle = positions - middle[:, np.newaxis]
-    velocities -= direction_to_middle * strength
-
-	# Fly away from nearby boids
-    separations = positions[:,np.newaxis,:] - positions[:,:,np.newaxis]
-    squared_displacements = separations * separations
-    square_distances = np.sum(squared_displacements, 0)
-    alert_distance = 100
-    far_away = square_distances > alert_distance
-    separations_if_close = np.copy(separations)
-    separations_if_close[0,:,:][far_away] =0
-    separations_if_close[1,:,:][far_away] =0
-    velocities += np.sum(separations_if_close,1) 
-
-	# Try to match speed with nearby boids
-    velocity_differences = velocities[:,np.newaxis,:] - velocities[:,:,np.newaxis]
-    formation_flying_distance = 10000
-    formation_flying_strength = 0.125
-    very_far=square_distances > formation_flying_distance
-    velocity_differences_if_close = np.copy(velocity_differences)
-    velocity_differences_if_close[0,:,:][very_far] =0
-    velocity_differences_if_close[1,:,:][very_far] =0
-    velocities -= np.mean(velocity_differences_if_close, 1) * formation_flying_strength
-
-    #update positions acc to velocities
-    positions += velocities
-
+boids=Boids(50)
 figure=plt.figure()
 axes=plt.axes(xlim=(-500,1500), ylim=(-500,1500))
-scatter=axes.scatter(pos[0],pos[1])
-
-def animate(frame):
-   update_boids(pos, vel)
-   scatter.set_offsets(zip(pos[0], pos[1]))
+scatter=axes.scatter(boids.pos[0],boids.pos[1])
 
 
-anim = animation.FuncAnimation(figure, animate,
+anim = animation.FuncAnimation(figure, boids.animate, fargs=[scatter], 
                                frames=50, interval=50)
 
 if __name__ == "__main__":
