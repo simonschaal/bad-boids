@@ -31,7 +31,6 @@ class Boids(object):
         separations = self.positions[:,np.newaxis,:] - self.positions[:,:,np.newaxis]
         squared_displacements = separations * separations
         square_distances = np.sum(squared_displacements, 0)
-        print square_distances
         far_away = square_distances > alert_distance
         separations_if_close = np.copy(separations)
         separations_if_close[0,:,:][far_away] =0
@@ -64,6 +63,8 @@ class Boids(object):
 
     def simulate(self, frames=50, interval=50, xlimits=(-500, 1500), ylimits=(-500, 1500)):
         figure=plt.figure()
+        #xlimits=(self._xy_low_lim[0], self._xy_up_lim[0]+frames*self._vxy_up_lim[0]) 
+        #ylimits=(self._xy_low_lim[1]+frames*self._vxy_up_lim[1], self._xy_up_lim[1]+frames*self._vxy_up_lim[1]) 
         axes=plt.axes(xlim=xlimits, ylim=ylimits)
         scatter=axes.scatter(self.positions[0],self.positions[1])
         anim = animation.FuncAnimation(figure, self._animate, fargs=[scatter], 

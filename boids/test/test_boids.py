@@ -10,9 +10,11 @@ def test_bad_boids_regression():
     boid_data=regression_data["before"]
     positions=np.array([boid_data[0], boid_data[1]])
     velocities=np.array([boid_data[2], boid_data[3]])
+    #feed data into boid
     boids=Boids(0)
     boids.positions=positions
     boids.velocities=velocities
+    #do update check if same values obtained
     boids.update_boids()
     for after,before in zip(regression_data["after"],positions.tolist()+velocities.tolist()):
         for after_value,before_value in zip(after,before): 
@@ -24,6 +26,7 @@ def test_gen_random():
     count=10
     boids=Boids(0)
     x, y = boids.gen_random(count, low, up)
+    #check if length is correct and if within given bounds
     assert_equal(len(x), count)
     assert max(x) <= up[0]
     assert min(x) >= low[0]
@@ -32,6 +35,7 @@ def test_gen_random():
     assert min(y) >= low[1]
 
 def test_fly_towards_middle():
+    #randomized test
     # generate random range data
     length=random.randint(10,50)
     boids=Boids(length)
@@ -42,6 +46,23 @@ def test_fly_towards_middle():
     assert_equal(fly_middle.size, 2*length)
     # for range variables it should sum to zero due to symmetry
     assert_almost_equal(np.sum(fly_middle), 0, delta = 1e-10)
+
+    #regression test
+    regression_data=yaml.load(open(os.path.join(os.path.dirname(__file__),'fixtures','flyToMiddle.yml')))
+    boid_data=regression_data["before"]
+    positions=np.array([boid_data[0], boid_data[1]])
+    velocities=np.array([boid_data[2], boid_data[3]])
+    #feed data into boid
+    boids=Boids(0)
+    boids.positions=positions
+    boids.velocities=velocities
+    #do update check if same values obtained
+    boids.velocities += boids._fly_towards_middle(0.01)
+    boids.positions += boids.velocities
+    for after,before in zip(regression_data["after"],positions.tolist()+velocities.tolist()):
+        for after_value,before_value in zip(after,before): 
+            assert_almost_equal(after_value,before_value,delta=0.02)
+	
 
 def test_avoid_collisions():
     # generate random range data
@@ -55,6 +76,23 @@ def test_avoid_collisions():
     # for range variables it should sum to zero due to symmetry
     assert_almost_equal(np.sum(collisions), 0, delta = 1e-10)
 
+    #regression test
+    regression_data=yaml.load(open(os.path.join(os.path.dirname(__file__),'fixtures','avoidCollisions.yml')))
+    boid_data=regression_data["before"]
+    positions=np.array([boid_data[0], boid_data[1]])
+    velocities=np.array([boid_data[2], boid_data[3]])
+    #feed data into boid
+    boids=Boids(0)
+    boids.positions=positions
+    boids.velocities=velocities
+    #do update check if same values obtained
+    boids.velocities += boids._avoid_collisions(100)
+    boids.positions += boids.velocities
+    for after,before in zip(regression_data["after"],positions.tolist()+velocities.tolist()):
+        for after_value,before_value in zip(after,before): 
+            assert_almost_equal(after_value,before_value,delta=0.02)
+	
+
 def test_match_Speed():
     # generate random range data
     length=random.randint(10,50)
@@ -65,4 +103,21 @@ def test_match_Speed():
     assert_equal(speed.size, 2*length)
     # for range variables it should sum to zero due to symmetry
     assert_almost_equal(np.sum(speed), 0, delta = 1e-10)
+    
+    #regression test
+    regression_data=yaml.load(open(os.path.join(os.path.dirname(__file__),'fixtures','matchSpeed.yml')))
+    boid_data=regression_data["before"]
+    positions=np.array([boid_data[0], boid_data[1]])
+    velocities=np.array([boid_data[2], boid_data[3]])
+    #feed data into boid
+    boids=Boids(0)
+    boids.positions=positions
+    boids.velocities=velocities
+    #do update check if same values obtained
+    boids.velocities += boids._match_speed_nearby(10000,0.125)
+    boids.positions += boids.velocities
+    for after,before in zip(regression_data["after"],positions.tolist()+velocities.tolist()):
+        for after_value,before_value in zip(after,before): 
+            assert_almost_equal(after_value,before_value,delta=0.02)
+	
 
