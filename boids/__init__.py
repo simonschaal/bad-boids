@@ -1,2 +1,1 @@
-#from graph import Greengraph
-#import boids
+from boids import Boids

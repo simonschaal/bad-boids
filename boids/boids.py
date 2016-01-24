@@ -3,14 +3,43 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 import numpy as np
 
-
+# Boids
+# needs config file. Important simulation parameters can be changed optionally and will be overwrite config file parameters if given.
 class Boids(object):
-    def __init__(self, boid_count, xlimits=(-450, 50), ylimits=(300, 600), vxlimits=(0, 10), vylimits=(-20, 20)):
-        self.boid_count=boid_count
-        self._xy_low_lim=np.array([xlimits[0], ylimits[0]])
-        self._xy_up_lim=np.array([xlimits[1], ylimits[1]])
-        self._vxy_low_lim=np.array([vxlimits[0], vylimits[0]])
-        self._vxy_up_lim=np.array([vxlimits[1], vylimits[1]])
+    def __init__(self, config, count=0, fly_to_middle=0, alert_distance=0, formation_flying_distance=0, formation_flying_strength=0): 
+        #get config 
+        self.config=config
+
+        #default config used if config empty
+        if not self.config:
+            self.config={
+                'Boids': 
+                {'count': 50, 'vylim': [-20, 20], 'vxlim': [0, 10], 'xlim': [-450, 50], 'ylim': [300, 600]}, 
+                'Dynamics': 
+                {'formation_flying_distance': 10000, 'alert_distance': 100, 'fly_to_middle_strength': 0.01, 'formation_flying_strength': 0.125}, 
+                'Animation': 
+                {'frames': 50, 'interval': 50, 'ylim': [-500, 1500], 'xlim': [-500, 1500]}
+            }
+        # Overwrite simulation parameters if given separately
+        if count:
+            self.config['Boids']['count']=count
+        if fly_to_middle:
+            self.config['Dynamics']['fly_to_middle_strength']=fly_to_middle
+        if alert_distance:
+            self.config['Dynamics']['alert_distance']=alert_distance
+        if formation_flying_distance:
+            self.config['Dynamics']['formation_flying_distance']=formation_flying_distance
+        if formation_flying_strength:
+            self.config['Dynamics']['formation_flying_strength']=formation_flying_strength
+
+
+        # setup flock
+        self.boid_count=self.config['Boids']['count']
+        self._xy_low_lim=np.array([self.config['Boids']['xlim'][0], self.config['Boids']['ylim'][0]])
+        self._xy_up_lim=np.array([self.config['Boids']['xlim'][1], self.config['Boids']['ylim'][1]])
+        self._vxy_low_lim=np.array([self.config['Boids']['vxlim'][0], self.config['Boids']['vylim'][0]])
+        self._vxy_up_lim=np.array([self.config['Boids']['vxlim'][1], self.config['Boids']['vylim'][1]])
+
         # generate random boid positions and velocities within given limits
         self.positions = self.gen_random(self.boid_count, self._xy_low_lim, self._xy_up_lim)
         self.velocities = self.gen_random(self.boid_count, self._vxy_low_lim, self._vxy_up_lim)
@@ -51,27 +80,25 @@ class Boids(object):
        
 
     def update_boids(self):
-        self.velocities += self._fly_towards_middle(0.01)  
-        self.velocities += self._avoid_collisions(100) 
-        self.velocities += self._match_speed_nearby(10000, 0.125)
+        # apply boids model
+        self.velocities += self._fly_towards_middle(self.config['Dynamics']['fly_to_middle_strength'])  
+        self.velocities += self._avoid_collisions(self.config['Dynamics']['alert_distance']) 
+        self.velocities += self._match_speed_nearby(self.config['Dynamics']['formation_flying_distance'], self.config['Dynamics']['formation_flying_strength'])
         #update positions acc to models
         self.positions += self.velocities
 
     def _animate(self,frame, scatter):
+        # animation runs update_boids() for each frame
         self.update_boids()
         scatter.set_offsets(zip(self.positions[0], self.positions[1]))
 
-    def simulate(self, frames=50, interval=50, xlimits=(-500, 1500), ylimits=(-500, 1500)):
+    def simulate(self):
+        #open plot for simulation and run animation
         figure=plt.figure()
-        #xlimits=(self._xy_low_lim[0], self._xy_up_lim[0]+frames*self._vxy_up_lim[0]) 
-        #ylimits=(self._xy_low_lim[1]+frames*self._vxy_up_lim[1], self._xy_up_lim[1]+frames*self._vxy_up_lim[1]) 
-        axes=plt.axes(xlim=xlimits, ylim=ylimits)
+        axes=plt.axes(xlim=self.config['Animation']['xlim'], ylim=self.config['Animation']['ylim'])
         scatter=axes.scatter(self.positions[0],self.positions[1])
         anim = animation.FuncAnimation(figure, self._animate, fargs=[scatter], 
-                                       frames=frames, interval=interval)
+                                       frames=self.config['Animation']['frames'], interval=self.config['Animation']['interval'])
         plt.show()
 
 
-if __name__ == "__main__":
-    boids=Boids(50)
-    boids.simulate()

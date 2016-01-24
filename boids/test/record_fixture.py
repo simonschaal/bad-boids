@@ -4,7 +4,7 @@ sys.path.append("..") # Adds higher directory to python modules path.
 
 from boids import Boids
 
-boids=Boids(50)
+boids=Boids({})
 before=boids.positions.tolist() + boids.velocities.tolist()
 #boids.update_boids()
 boids.velocities += boids._match_speed_nearby(10000,0.125)
